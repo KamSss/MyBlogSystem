@@ -1,0 +1,122 @@
+#include<cstdio>
+#include<cstdlib>
+#include<mysql/mysql.h>
+#include<jsoncpp/json/json.h>
+#include<memory>
+
+namespace blog_system{
+  status MTSQL* MySQLLInit(){
+  //初始化一个 MYSQL 句柄并建立连接
+  //1.创建一个句柄
+  MYSQL* connect_fd = mysql_init(NULL);
+  //2.和数据库建立链接
+   if(mysql_real_connect(connect_fd,"127.0.0.1","root","",
+                        "blog_system",3306,NULL,0) == NULL)
+   {
+   printf("链接失败！%s\n",mysql_error(connect_fd));
+   return 1;
+   }
+   //3.设定字符编码
+      mysql_set_character_set(connect_fd,"utf8");
+      return connect_fd;
+   }
+   //释放句柄断开连接
+   static void MySQLRelease(MYSQL* connect_fd){
+   mysql_close(commect_fd);
+   }
+   //创建一个类，用于操作博客表的类
+   class BlogTable{
+   public:
+			BlogTable(MYSQL* connect_fd){
+			//通过这个构造函数获取到一个数据库的操作句柄
+			}
+			//以下操作相关参数都统一使用 JSON 的方式
+			//Json:value jsoncpp 中最核心的类
+			//Json:Value 就表示一个具体的 JSON 对象
+			//形如：
+			//    {   blog_id:1,
+      //     title:"我的第一篇博客",
+      //     create_time:"2019/07/28",
+      //     tag_id:1
+			//     }
+			//最大的好处是方便扩展
+			bool Insert(const Json::Value& blog){
+        const std::string& content = blog["content"].asString();
+        //为啥 to 的长度是 2 * size + 1这是官方文档的要求
+        //char* to = new char[content.size() * 2 + 1];
+        std::unique_ptr<char> to(new char[content.size() * 2 + 1]);
+        mysql_real_escape_string(mysql_,to.get(),content.c_str(),content.size());
+        //核心就是拼 sql 语句
+        std::unique_ptr<char> sql(new char[content] * 2 + 4096);//把4095留给标题啊什么的
+        sprintf(sql.get(),"insert into blog_table values(null,'%s','%s','%d','%s')",
+            blog["title"].asCString(),
+            to.get(),
+            blog["tag_id"].asInt(),
+            blog["create_time"].asCString());
+        int ret = mysql_query(mysql_,sql.get());
+        if(ret != 0){
+          printf("执行插入博客失败！%s\n",mysql_error(mysql)
+        }
+				return true;
+			}
+			
+			//blogs 作为一个输出型参数
+			bool SelectALL(Json::Value* blogs,const std::string& tag_id){
+				return true;
+			}
+			
+			//blog 同样是输出型参数，根据当前的 blog_id 在数据库中找到具体的
+			//博客内容通过 blog 参数返回给调用者
+			bool SelectOne(int32_t blog_id,Json::Value* blog){
+				char sql[1024] = {0};
+				sprintd(sql,"select blog_id,title,content,tag_id,create_time from blog_table where blog_id = %d",blog_id);
+				int ret = mysql_query(mysql_,sql);
+				if(ret != 0){
+				printf("执行查找博客失败 %s\n",mysql_error(mysql_));
+				return false;
+			}
+			
+			//数据库修改操作
+			bool Update(const Json::Value& blog){
+				return true;
+			}
+			
+			bool Delete(const Json::Value& blog){
+				return true;
+			}
+	private:
+	};
+		
+	class TagTable{
+	public:
+		TagTable(){}
+		
+		bool Insert(const Json::Value& blog){
+			retuen true;
+		}
+		
+		bool Delete(int32_t blog_id){
+			return true;
+		}
+		
+		bool Update(const Json::Value& blog){
+			return true;
+		}
+	private:
+	
+	};
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
