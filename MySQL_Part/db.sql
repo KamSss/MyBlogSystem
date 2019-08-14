@@ -9,6 +9,7 @@
 -- 1.使用时间戳 2.使用机房id 3.使用主机ip 4.使用随机数 5.加锁（不推荐，因为加锁会大大降低效率，为了效率牺牲了数据的强一致性）
 drop database MyBlogDB;
 create database MyBlogDB DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+set character_set_server=utf8;
 use MyBlogDB;
 
 drop table if exists blog_table;
