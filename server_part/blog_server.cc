@@ -1,6 +1,7 @@
 #include "httplib.h"
 #include "db.hpp"
 #include "signal.h"
+#include <iostream>
 
 MYSQL* mysql = NULL;
 
@@ -8,7 +9,7 @@ int main(){
   using namespace httplib;
   using namespace blog_system;
   //1.先和数据库建立好连接
-  mysql = blog_system::MySQLInit();
+  mysql = MySQLInit();
   //我们平常按ctrl+c退出的本质是SIGINT信号
   //这里传一个回调函数 用Lambda表示
   signal(SIGINT,[](int){ MySQLRelease(mysql); exit(0);});
@@ -20,7 +21,7 @@ int main(){
 
   //为什么用Lambda：通过成员函数.的方式就可以关联到方法如post 写成Lambda的方式就不用单独定义函数了，往里一写就行 在[]用捕捉方式捕捉到变量
   //新增博客
-  server.Post("/blog",[&blog_table](const Request& req,Response& resp){ //R是原始字符串 转义不生效
+  server.Post("/blog",[&blog_table](const Request& req,Response& resp) { //R是原始字符串 转义不生效
     printf("新增博客!\n");
     //1.获取到请求中的 body 并解析成 json
     Json::Reader reader;//把字符串转成json对象用reader
@@ -64,7 +65,7 @@ int main(){
   });
 
   //查看所有博客列表
-//  server.Get(R"/blog",[]{const Request& req,})Response& resp){
+//server.Get(R"/blog",[]{const Request& req,})Response& resp){
 //    printf("查看所有博客\n");
 //    //1.尝试获取tag_id 如果这个参数不存在
 //    // 返回空字符串
@@ -74,7 +75,7 @@ int main(){
 //    Json::Value resp_json;
 //    bool ret = blog_table.SelectAll(&resp_json,tag_id);
 //    if(!ret){
-//        reqp_json["ok"] = false;
+//        resp_json["ok"] = false;
 //        resp_json["reason"] = "select all failed";
 //        resp.status = 500;
 //        resp.set_content(writer.write(resp_json),"application/json");
@@ -94,7 +95,7 @@ int main(){
 //    Json::Value reqp_json;
 //    bool ret = blog_table.SelectOne(&resp_json,tag_id);
 //    if(!ret){
-//        reqp_json["ok"] = false;
+//        resp_json["ok"] = false;
 //        resp_json["reason"] = "查看指定博客失败：" + std::to_string(blog_id);
 //        resp.status = 404;
 //        resp.set_content(writer.write(resp_json),"application/json");
@@ -102,7 +103,7 @@ int main(){
 //    //3.包装一个执行正确的响应
 //    resp.set_content(writer.write(resp_json),"application/json");
 //    return;
-//  });
+// });
 //
 //  //修改某个博客
 //  server.Put(R"(/blog/(\d+))"[](const Request& req, Response& resp){
@@ -116,7 +117,7 @@ int main(){
 //    Json::Value resp_json;
 //    bool ret = reader.parse(req.body,req_json);
 //   if(!ret){
-//       reqp_json["ok"] = false;
+//       resp_json["ok"] = false;
 //       resp_json["reason"] = "修改指定博客失败：";
 //       resp.status = 400;
 //       resp.set_content(writer.write(resp_json),"application/json");
@@ -134,7 +135,7 @@ int main(){
 //    req_json["blog_id"] = blog_id;//从path中的带的 id 设置到json对象中
 //    ret = blog_table.Update(req_json);
 //    if(!ret){
-//       reqp_json["ok"] = false;
+//       resp_json["ok"] = false;
 //       resp_json["reason"] = "修改指定博客失败";
 //       resp.status = 500;
 //       resp.set_content(writer.write(resp_json),"application/json");
@@ -154,7 +155,7 @@ int main(){
 //    //2.调用数据库操作
 //    bool ret = blog_table.Delete(blog_id);
 //    if(!ret){
-//        reqp_json["ok"] = false;
+//        resp_json["ok"] = false;
 //        resp_json["reason"] = "删除指定博客失败";
 //        resp.status = 500;
 //        resp.set_content(writer.write(resp_json),"application/json");
@@ -184,4 +185,3 @@ int main(){
   server.listen("0.0.0.0",9093);
   return 0;
 }
-       
