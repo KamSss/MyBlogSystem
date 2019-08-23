@@ -51,10 +51,10 @@ void TestTagTable(){
     blog_system::TagTable tag_table(mysql);
 
     //测试插入：成功！
-    //json::Value tag;
-    //tag["tag_name"] = "C语言";
-    //bool ret = tag_table.Insert(tag);
-    //printf("insert %d\n", ret);
+    Json::Value tag;
+    tag["tag_name"] = "C语言";
+    bool ret = tag_table.Insert(tag);
+    printf("insert %d\n", ret);
 
     //测试查找：成功！
     //Json::Value tags;
@@ -63,8 +63,8 @@ void TestTagTable(){
     //printf("tags: %s",writer.write(tags).c_str());
 
     //测试删除：成功！
-    bool ret = tag_table.Delete(1);
-    printf("delete %d\n",ret);
+    //bool ret = tag_table.Delete(1);
+    //printf("delete %d\n",ret);
     blog_system::MySQLRelease(mysql);
 }
 int main() {
