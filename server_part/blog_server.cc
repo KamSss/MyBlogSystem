@@ -8,6 +8,7 @@ MYSQL* mysql = NULL;
 int main(){
   using namespace httplib;
   using namespace blog_system;
+
   //1.先和数据库建立好连接
   mysql = MySQLInit();
   //我们平常按ctrl+c退出的本质是SIGINT信号
@@ -250,22 +251,25 @@ int main(){
   });
 
   //查看所有标签
-  server.Get("/tag",[&tag_table](const Request& req,Response& resp){
-    //1.不需要解析参数，直接执行数据库操作
-    Json::FastWriter writer;
-    Json::Value resp_json;
-    bool ret = tag_table.SelectALL(&resp_json);
-    if(!ret){
-      printf("获取标签失败！\n");
-      resp_json["ok"] = false;
-      resp_json["reason"] = "error: get tag database failed";
-      resp.status = 500;
-      resp.set_content(writer.write(resp_json),"application/json");
-      return;
+  server.Get("/tag", [&tag_table](const Request& req, Response& resp){
+    printf("查看所有标签!\n");
+    (void) req; 
+    Json::Reader reader; 
+    Json::FastWriter writer; 
+    Json::Value resp_json; 
+    // 1. 调用数据库接口查询数据
+    Json::Value tags; 
+    bool ret = tag_table.SelectALL(&tags); 
+    if (!ret)
+    { 
+         resp_json["ok"] = false; 
+         resp_json["reason"] = "SelectAll failed!\n"; 
+         resp.status = 500; 
+         resp.set_content(writer.write(resp_json), "application/json"); 
+         return;  
     }
-    //2.构造正确响应
-    resp_json["ok"] = true;
-    resp.set_content(writer.write(resp_json),"application/json");
+    // 2. 构造响应结果 
+    resp.set_content(writer.write(tags), "application/json"); 
     return;
   });
 
