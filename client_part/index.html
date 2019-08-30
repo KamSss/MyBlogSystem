@@ -82,24 +82,35 @@
             <div class="row">
                 <div class="col-md-8 blog-main">
                     <div class="row">
-                        <div class="col-md-6 col-sm-6" v-for="blog in blogs" v-cloak>
-                            <article class="blog-teaser">
-                                <header>
-                                    <img src="img/1.jpg" alt="">
-                                    <!--v-on:click是把当前html标签关联上一个鼠标点击事件-->
-                                    <h3><a v-on:click="get_blog(blog.blog_id)">{{blog.title}}</a></h3>
-                                    <!--插值表达式-->
-                                    <span class="meta">{{author}}</span>
-                                    <span>{{blog.create_time}}</span>
-                                    <hr>
-                                </header>
-                                <div class="clearfix">
-                                    <a href="" class="btn btn-clean-one">{{tag_idToName(blog.tag_id)}}</a>
-                                </div>
-                            </article>
+
+
+                        <!--标题界面-->
+                        <div v-show="blog.blog_id == null">
+                            <div class="col-md-6 col-sm-6" v-for="blog in blogs" v-cloak>
+                                <article class="blog-teaser">
+                                    <header>
+                                        <img src="img/1.jpg" alt="">
+                                        <!--v-on:click是把当前html标签关联上一个鼠标点击事件-->
+                                        <h3><a v-on:click="get_blog(blog.blog_id)">{{blog.title}}</a></h3>
+                                        <!--插值表达式-->
+                                        <span class="meta">{{author}}</span>
+                                        <span>{{blog.create_time}}</span>
+                                        <hr>
+                                    </header>
+                                    <div class="clearfix">
+                                        <a href="" class="btn btn-clean-one">{{tag_idToName(blog.tag_id)}}</a>
+                                    </div>
+                                </article>
+                            </div>
                         </div>
 
-
+                        <!--跳转至正文界面-->
+                        <div class="am-u-md-8 am-u-sm-12" v-show="blog.blog_id != null">
+                            <!--先使用 editor.md 完成 markdown 到 html 的转换-->
+                            <article id="blog_view">
+                            </article>
+                            <a class="btn btn-clean-one" v-on:click="back()">返回</a>
+                        </div>
 
                     </div>
                 </div>
@@ -137,7 +148,9 @@
 
                         <p>如果关于此网站你有任何问题，欢迎点击下面的按钮联系我</p>
                         <div class="footer-widget-icon">
-                            <i class="fa fa-facebook"></i><i class="fa fa-twitter"></i><i class="fa fa-google"></i>
+                            <a href="https://weibo.com/2144469784/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1"><i class="fa fa-facebook"></i></a>
+                            <a href="https://github.com/KamSss"><i class="fa fa-twitter"></i></a>
+                            <a href="https://blog.csdn.net/qq_42685588"><i class="fa fa-google"></i></a>
                         </div>
                     </div>
 
@@ -164,117 +177,118 @@
     <script src="editor.md/editormd.js"></script>
 
     <script>
-        var app = new Vue({ //vue是动态弱类型的语言，不需要指定类型 大括号内以json形式组织数据
-            el: '#app', // el表示vue对象关联到哪个html元素（这样改js就可以影响html）
-            data: {
-                // 把 js 中的数据和界面上的内容关联在一起，称为数据绑定
-                // data 表示所有需要在页面上动态变化的数据
-                author: '张昊铮',
-                blogs: [
-                    //这里可以放默认数据，为了方便管理，把这里清空了
-                ],
-                tags: [
-                ],
-                //blog对象用来保存当前页面上
-                blog: {
-                    blog_id: null,
-                    title: null,
-                    content: null,
-                    create_time: null,
-                    tag_id: null,
-                }
-            },
-            //methods方法，可理解成成员函数，而data就可以理解成成员变量。定义methods成员函数来操作data成员变量。
-            methods: {
-                //tag_idToName相当于json键值对中的键 值就是函数 通过key可以找到对应的函数
-                //把tag_id转换成tag_name
-                tag_idToName(tag_id) {
-                    // 写一个for循环，this 就访问到当前的app对象 定义一个数组下标i
-                    //this.tags 就相当于上面定义的标签数组
-                    for (var i in this.tags) {
-                        if (this.tags[i].tag_id == tag_id) {
-                            return this.tags[i].tag_name
-                        }
-                    }
-                    //如果没有找到标签 return默认标签
-                    return "默认"
-                },
-                //获取同一个服务器内的其他资源（数据库数据）
-                get_blogs(tag_id) {
-                    //可以写成 var url = 'http://101..:9093/blog' 但是在同一个服务器内 就不用写这么复杂
-                    var url = '/blog';
-                    if (tag_id != null) {
-                        url = '/blog/?tag_id=' + tag_id;
-                    }
-
-                    //最核心操作：访问 http 服务器的数据
-                    //ajax：最流行的前后端交互数据方法。通过ajax api构造http请求，并获取响应中的数据。
-                    //ajax原生api很难用.Vue也提供了api，但是环境配置难.
-                    //我这里选择使用JQuery提供的API
-
-                    //调用ajax函数 ajax参数我在w3school搜的ajax文档
-                    $.ajax({
-                        url: url,
-                        //type:按照哪种‘方法’访问
-                        type: "get",
-                        context: this,
-                        //success里面的值是回调函数，表示http请求成功之后我们要执行什么操作
-                        success: function (data, status) {//在这个代码中更新数据
-                            //data表示http响应的结果（body数据，即json格式的数组) status表示状态码
-
-                            //如果上面不设置 context:this，此时直接使用 this.blogs 是会出错的
-                            //因为此时的 this 表示当前‘$’这样的jquery 对象，而不是vue对象
-                            this.blogs = data;
-                        }
-                    })
-                },
-                init() {
-                    //1.从服务器上获取 tag
-                    $.ajax({
-                        type: "get",
-                        url: "/tag",
-                        context: this,
-                        success: function (data, status) {
-                            this.tags = data;
-                            //2.从服务器获取博客
-                            //此处把get_blogs写到回调内部，让ajax和get_blogs串行执行，因为需要先获取到tag信息，然后才能获取博客列表
-                            //否则tag_id和tag_name的映射关系(tagidToName)无法正确建立。
-                            this.get_blogs();
-                        }
-                    })
-                },
-                get_blog(blog_id) {
-                    $ajax({
-                        url: '/blog/' + blog_id,
-                        type: "get",
-                        context: this,
-                        success: function (data, status) {
-                            //此时得到的blog.content 是mk格式的数据
-                            this.blog = data;
-                            //把mk转成html，并显示在界面上
-                            testEditormdView = editormd.markdownToHTML("blog_view", {
-                                markdown: this.blog.content,//+ "\r\n" + $("#append-test").text(),
-                                //htmlDecode      : true,       // 开启 HTML 标签解析，为了安全性，默认不开启
-                                htmlDecode: "style,script,iframe",  // you can filter tags decode
-                                //toc             : false,
-                                tocm: true,    // Using [TOCM]
-                                //tocContainer    : "#custom-toc-container", // 自定义 ToC 容器层
-                                //gfm             : false,
-                                //tocDropdown     : true,
-                                // markdownSourceCode : true, // 是否保留 Markdown 源码，即是否删除保存源码的 Textarea 标签
-                                emoji: true,
-                                taskList: true,
-                                tex: true,  // 默认不解析
-                                flowChart: true,  // 默认不解析
-                                sequenceDiagram: true,  // 默认不解析
-                            });
-                        }
-                    })
-                }
-            },
-        });
-        // 初始化的获取数据操作
-        app.init();
+     var app = new Vue({ //vue是动态弱类型的语言，不需要指定类型 大括号内以json形式组织数据
+         el: '#app', // el表示vue对象关联到哪个html元素（这样改js就可以影响html）
+         data: {
+             // 把 js 中的数据和界面上的内容关联在一起，称为数据绑定
+             // data 表示所有需要在页面上动态变化的数据
+             author: '张昊铮',
+             blogs: [
+                 //这里可以放默认数据，为了方便管理，把这里清空了
+             ],
+             tags: [
+             ],
+             //blog对象用来保存当前页面上
+             blog: {
+                 blog_id: null,
+                 title: null,
+                 content: null,
+                 create_time: null,
+                 tag_id: null,
+             }
+         },
+         //methods方法，可理解成成员函数，而data就可以理解成成员变量。定义methods成员函数来操作data成员变量。
+         methods: {
+             //tag_idToName相当于json键值对中的键 值就是函数 通过key可以找到对应的函数
+             //把tag_id转换成tag_name
+             tag_idToName(tag_id) {
+                 // 写一个for循环，this 就访问到当前的app对象 定义一个数组下标i
+                 //this.tags 就相当于上面定义的标签数组
+                 for (var i in this.tags) {
+                     if (this.tags[i].tag_id == tag_id) {
+                          return this.tags[i].tag_name
+                      }
+                  }
+                  //如果没有找到标签 return默认标签
+                  return "默认"
+              },
+              //获取同一个服务器内的其他资源（数据库数据）
+              get_blogs(tag_id) {
+                  //可以写成 var url = 'http://101..:9093/blog' 但是在同一个服务器内 就不用写这么复杂
+                  var url = '/blog';
+                  if (tag_id != null) {
+                      url = '/blog/?tag_id=' + tag_id;
+                  }
+                  //最核心操作：访问 http 服务器的数据
+                  //ajax：最流行的前后端交互数据方法。通过ajax api构造http请求，并获取响应中的数据。
+                  //ajax原生api很难用.Vue也提供了api，但是环境配置难.
+                  //我这里选择使用JQuery提供的AP
+                  //调用ajax函数 ajax参数我在w3school搜的ajax文档
+                  $.ajax({
+                      url: url,
+                      //type:按照哪种‘方法’访问
+                      type: "get",
+                      context: this,
+                      //success里面的值是回调函数，表示http请求成功之后我们要执行什么操作
+                      success: function (data, status) {//在这个代码中更新数据
+                          //data表示http响应的结果（body数据，即json格式的数组) status表示状态
+                          //如果上面不设置 context:this，此时直接使用 this.blogs 是会出错的
+                          //因为此时的 this 表示当前‘$’这样的jquery 对象，而不是vue对象
+                          this.blogs = data;
+                      }
+                  })
+              },
+              init() {
+                  //1.从服务器上获取 tag
+                  $.ajax({
+                      type: "get",
+                      url: "/tag",
+                      context: this,
+                      success: function (data, status) {
+                          this.tags = data;
+                          //2.从服务器获取博客
+                          //此处把get_blogs写到回调内部，让ajax和get_blogs串行执行，因为需要先获取到tag信息，然后才能获取博客列表
+                          //否则tag_id和tag_name的映射关系(tagidToName)无法正确建立。
+                          this.get_blogs();
+                      }
+                  })
+              },
+              get_blog(blog_id) {
+                  $.ajax({
+                      url: '/blog/' + blog_id,
+                      type: "get",
+                      context: this,
+                      success: function (data, status) {
+                          //此时得到的blog.content 是mk格式的数据
+                          this.blog = data;
+                          //把mk转成html，并显示在界面上
+                          testEditormdView = editormd.markdownToHTML("blog_view", {
+                              markdown: this.blog.content,//+ "\r\n" + $("#append-test").text(),
+                              //htmlDecode      : true,       // 开启 HTML 标签解析，为了安全性，默认不开启
+                              htmlDecode: "style,script,iframe",  // you can filter tags decode
+                              //toc             : false,
+                              tocm: true,    // Using [TOCM]
+                              //tocContainer    : "#custom-toc-container", // 自定义 ToC 容器层
+                              //gfm             : false,
+                              //tocDropdown     : true,
+                              // markdownSourceCode : true, // 是否保留 Markdown 源码，即是否删除保存源码的 Textarea 标签
+                              emoji: true,
+                              taskList: true,
+                              tex: true,  // 默认不解析
+                              flowChart: true,  // 默认不解析
+                              sequenceDiagram: true,  // 默认不解析
+                          });
+                      }
+                  })
+              },
+              //在正文内部返回
+              back(){
+                this.blog = {};
+              },
+          },
+      });
+      // 初始化的获取数据操作
+      app.init();
     </script>
 </body>
 

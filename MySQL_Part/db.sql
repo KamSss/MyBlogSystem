@@ -25,3 +25,9 @@ create table tag_table(
     tag_id int not null primary key auto_increment comment '标签id',
     tag_name varchar(50) comment '标签内容'
 );
+
+create table if not exists user_table(
+	user_id int primary key auto_increment comment '用户id',
+	user_name varchar(32) unique comment '用户名',
+	user_password varchar(32) comment '用户密码'
+	);

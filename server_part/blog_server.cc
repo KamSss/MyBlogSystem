@@ -39,7 +39,6 @@ int main(){
        resp_json["reason"] = "Parse false!";
        resp.status = 400;
        resp.set_content(writer.write(resp_json),"application/json");
-       
        return;
     }
 
